@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../libs/webgl-utils.js"></script>
+    <script src="../libs/webgl-debug.js"></script>
+    <script src="../libs/cuon-utils.js"></script>
+</head>
+<body>
+    <canvas id="main" width="400" height="400"></canvas>
+</body>
+<script>
+    var canvas = document.getElementById("main")
+    // var gl = getWebGLContext(canvas)
+    var gl = canvas.getContext("webgl")
+    // 指定清空 <canvas> 的颜色   =>  当gl擦除指定区域的时候被擦除区域将会变成指定颜色
+    gl.clearColor(1.0,0.0,0.0,1.0)
+    // 清空 <canvas>   =>  清除绘图区域其实就是清除颜色缓冲区，gl.COLOR_BUFFER_BIT表示颜色缓冲区
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    /** ** ** 注意 ** ** ** 
+     gl.COLOR_BUFFER_BIT  指定颜色缓冲区
+     gl.DEPTH_BUFFER_BIT  指定深度缓冲区
+     gl.STENCIL_BUFFER_BIT  指定模板缓冲区
+
+     如果没有指定背景色（没有调用gl.clearColor）将会使用默认值
+     颜色缓冲区  (0.0, 0.0, 0.0, 0.0)
+     深度缓冲区  1.0
+     模板缓冲区  0
+    ** ** **/
+</script>
+</html>
