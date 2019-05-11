@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../libs/webgl-utils.js"></script>
+    <script src="../libs/webgl-debug.js"></script>
+    <script src="../libs/cuon-utils.js"></script>
+</head>
+<body>
+    <canvas id="main" width="400" height="400"></canvas>
+</body>
+<script>
+    // 顶点着色器程序  设置坐标  设置尺寸
+    var VSHADER_SOURCE = 
+    `void main() {
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_PointSize = 10.0;
+    }`
+    // 片元着色器程序  设置颜色
+    var FSHADER_SOURCE = 
+    `void main() {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }`
+    var canvas = document.getElementById("main")
+    var gl = canvas.getContext("webgl")
+    function loadShader(gl, type, source) {
+        // WebGLRenderingContext.createShader()方法用于创建一个WebGLShader着色器对象，该对象可以使用 WebGLRenderingContext.shaderSource() 和 WebGLRenderingContext.compileShader() 方法配置着色器代码
+        var shader = gl.createShader(type);
+        // WebGLRenderingContext.shaderSource()方法用于设置WebGLShader着色器（顶点着色器及片元着色器）的GLSL程序代码。
+        gl.shaderSource(shader, source);
+        // WebGLRenderingContext.compileShader()用于编译一个GLSL着色器，使其成为为二进制数据，然后就可以被WebGLProgram对象所使用.
+        gl.compileShader(shader);
+        /**
+         * 返回给定的着色器信息
+         * gl.DELETE_STATUS:标示着色器是否被删除，true代表已经删除 false代表未删除
+         * gl.COMPILE_STATUS: 标示着色器是否编译成功，true代表编译成功，false代表未编译成功
+         * gl.SHADER_TYPE: 标示着色器类型，是顶点着色器(gl.VERTEX_SHADER)还是片元着色器(gl.FRAGMENT_SHADER)
+         */
+        // var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+        // if (!compiled) {
+        //     var error = gl.getShaderInfoLog(shader);
+        //     console.log('Failed to compile shader: ' + error);
+        //     gl.deleteShader(shader);
+        //     return null;
+        // }
+        return shader;
+    }
+    // 初始化着色器
+    var vertexShader = loadShader(gl, gl.VERTEX_SHADER, VSHADER_SOURCE);
+    var fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, FSHADER_SOURCE);
+    if (!vertexShader || !fragmentShader) {
+      throw new Error("初始化着色器失败")
+    }
+    // 创建一个WebGLProgram对象 (可以将WebGLProgram对象理解为程序对象，所有的着色器对象到附加到这个程序对象上，通过执行这个程序对象就可以绘制了)
+    var program = gl.createProgram();
+    if (!program) {
+      throw new Error("WebGLProgram对象失败")
+    }
+    // 预先将WebGLShader着色器对象附着到WebGLProgram对象上
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    // 只有将WebGLProgram对象链接之后才可以使用 （可以理解为attachShader只是为了将着色器挂载到程序对象上，真正的要编译成可执行的程序还需要最后一步将这个程序对象链接到webgl里）
+    gl.linkProgram(program);
+  
+    // 检查WebGLProgram对象是否被成功链接,只有成功链接的WebGLProgram对象才能被使用
+    var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (!linked) {
+      var error = gl.getProgramInfoLog(program);
+      console.log('Failed to link program: ' + error);
+      gl.deleteProgram(program);
+      gl.deleteShader(fragmentShader);
+      gl.deleteShader(vertexShader);
+      throw new Error("WebGLProgram对象未成功链接")
+    }
+    // 使用这个WebGLProgram对象
+    gl.useProgram(program);
+    gl.program = program;
+    // 指定清空 <canvas> 的颜色   =>  当gl擦除指定区域的时候被擦除区域将会变成指定颜色（其实就是将指定颜色作为背景色）
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    // 清空 <canvas>   =>  清除绘图区域其实就是清除颜色缓冲区，gl.COLOR_BUFFER_BIT表示颜色缓冲区
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    /** ** ** 知识点 ** ** **
+    gl.COLOR_BUFFER_BIT    指定颜色缓冲区
+    gl.DEPTH_BUFFER_BIT    指定深度缓冲区
+    gl.STENCIL_BUFFER_BIT  指定模板缓冲区
+
+    如果没有指定背景色（没有调用gl.clearColor）将会使用默认值
+    颜色缓冲区  0.0, 0.0, 0.0, 0.0
+    深度缓冲区  1.0
+    模板缓冲区  0
+    ** ** ** ** ** ** ** ** **/
+
+    // WebGLRenderingContext.drawArrays()方法用于从向量数组中绘制图元。
+    gl.drawArrays(gl.POINTS, 0, 1)
+    /** ** ** 知识点 ** ** **
+    语法
+    void gl.drawArrays(mode, first, count);
+    参数
+    mode
+        GLenum 类型，指定绘制图元的方式，可能值如下。
+        gl.POINTS: 绘制一系列点。
+        gl.LINE_STRIP: 绘制一个线条。即，绘制一系列线段，上一点连接下一点。
+        gl.LINE_LOOP: 绘制一个线圈。即，绘制一系列线段，上一点连接下一点，并且最后一点与第一个点相连。
+        gl.LINES: 绘制一系列单独线段。每两个点作为端点，线段之间不连接。
+        gl.TRIANGLE_STRIP：绘制一个三角带。
+        gl.TRIANGLE_FAN：绘制一个三角扇。
+        gl.TRIANGLES: 绘制一系列三角形。每三个点作为顶点。
+    first
+        GLint 类型 ，指定从哪个点开始绘制。
+    count
+        GLsizei 类型，指定绘制需要使用到多少个点。
+    ** ** ** ** ** ** ** ** **/
+</script>
+</html>
